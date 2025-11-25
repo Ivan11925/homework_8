@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Закладки і Форма</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #444;
+      }
+
+      input,
+      button {
+        display: block;
+        width: calc(100% - 40px);
+        margin: 10px auto;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      a {
+        color: chocolate;
+        font-size: 22px;
+        text-decoration: none;
+        word-break: break-all;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      button {
+        background-color: #00ff15;
+        color: white;
+        cursor: pointer;
+        border: none;
+        width: 100px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      ul li {
+        padding: 10px;
+        margin: 5px 0;
+        background: #f9f9f9;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      ul li:hover {
+        background-color: #e9e9e9;
+      }
+
+      button.delete {
+        background-color: #dc3545;
+        color: white;
+        width: auto;
+        padding: 6px 12px;
+        margin-left: 10px;
+      }
+
+      button.delete:hover {
+        background-color: #c82333;
+      }
+
+      button.edit {
+        background-color: #007bff;
+        color: white;
+        width: auto;
+        padding: 6px 12px;
+      }
+
+      button.edit:hover {
+        background-color: #0056b3;
+      }
+
+      .bookmark-buttons {
+        display: flex;
+        gap: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Закладки -->
+    <div class="container" id="bookmarkApp">
+      <h1>Закладки</h1>
+      <input type="text" id="bookmarkInput" placeholder="URL" />
+      <button id="addBookmarkBtn">Додати</button>
+      <ul id="bookmarkList"></ul>
+    </div>
+
+    <!-- Форма збереження даних -->
+    <div class="container" id="formApp">
+      <h1>Форма</h1>
+      <input type="text" id="username" placeholder="Логін" />
+      <input type="password" id="password" placeholder="Пароль" />
+      <button id="saveBtn">Зберегти</button>
+    </div>
+
+    <script>
+      // Bookmarks app
+      (function () {
+        const bookmarkInput = document.getElementById("bookmarkInput");
+        const addBookmarkBtn = document.getElementById("addBookmarkBtn");
+        const bookmarkList = document.getElementById("bookmarkList");
+        const storageKey = "bookmarks";
+
+        let bookmarks = [];
+
+        function loadBookmarks() {
+          const data = localStorage.getItem(storageKey);
+          bookmarks = data ? JSON.parse(data) : [];
+        }
+
+        function saveBookmarks() {
+          localStorage.setItem(storageKey, JSON.stringify(bookmarks));
+        }
+
+        function renderBookmarks() {
+          bookmarkList.innerHTML = "";
+          bookmarks.forEach((url, index) => {
+            const li = document.createElement("li");
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = url;
+
+            const buttonsDiv = document.createElement("div");
+            buttonsDiv.className = "bookmark-buttons";
+
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "Редагувати";
+            editBtn.className = "edit";
+            editBtn.addEventListener("click", () => editBookmark(index));
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Видалити";
+            deleteBtn.className = "delete";
+            deleteBtn.addEventListener("click", () => deleteBookmark(index));
+
+            buttonsDiv.appendChild(editBtn);
+            buttonsDiv.appendChild(deleteBtn);
+
+            li.appendChild(link);
+            li.appendChild(buttonsDiv);
+            bookmarkList.appendChild(li);
+          });
+        }
+
+        function isValidURL(string) {
+          try {
+            new URL(string);
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }
+
+        function addBookmark() {
+          const url = bookmarkInput.value.trim();
+          if (!url) {
+            alert("Будь ласка, введіть URL.");
+            return;
+          }
+          if (!isValidURL(url)) {
+            alert("Введено некоректний URL.");
+            return;
+          }
+          if (bookmarks.includes(url)) {
+            alert("Цей закладка вже додана.");
+            return;
+          }
+          bookmarks.push(url);
+          saveBookmarks();
+          renderBookmarks();
+          bookmarkInput.value = "";
+        }
+
+        function editBookmark(index) {
+          const currentURL = bookmarks[index];
+          const newURL = prompt("Редагуйте URL:", currentURL);
+          if (newURL === null) return; // Cancel pressed
+          const trimmedURL = newURL.trim();
+          if (!trimmedURL) {
+            alert("URL не може бути пустим.");
+            return;
+          }
+          if (!isValidURL(trimmedURL)) {
+            alert("Введено некоректний URL.");
+            return;
+          }
+          bookmarks[index] = trimmedURL;
+          saveBookmarks();
+          renderBookmarks();
+        }
+
+        function deleteBookmark(index) {
+          if (confirm("Ви впевнені, що хочете видалити цю закладку?")) {
+            bookmarks.splice(index, 1);
+            saveBookmarks();
+            renderBookmarks();
+          }
+        }
+
+        addBookmarkBtn.addEventListener("click", addBookmark);
+
+        bookmarkInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            addBookmark();
+          }
+        });
+
+        loadBookmarks();
+        renderBookmarks();
+      })();
+
+      // Form app
+      (function () {
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const saveBtn = document.getElementById("saveBtn");
+
+        const userKey = "username";
+        const passKey = "password";
+
+        function loadFormData() {
+          const savedUsername = localStorage.getItem(userKey);
+          const savedPassword = localStorage.getItem(passKey);
+          if (savedUsername) usernameInput.value = savedUsername;
+          if (savedPassword) passwordInput.value = savedPassword;
+        }
+
+        function saveFormData() {
+          localStorage.setItem(userKey, usernameInput.value);
+          localStorage.setItem(passKey, passwordInput.value);
+          alert("Дані збережено!");
+        }
+
+        saveBtn.addEventListener("click", saveFormData);
+
+        loadFormData();
+      })();
+    </script>
+  </body>
+</html>
