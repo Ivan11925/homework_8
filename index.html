@@ -110,7 +110,6 @@
     </style>
   </head>
   <body>
-    <!-- Закладки -->
     <div class="container" id="bookmarkApp">
       <h1>Закладки</h1>
       <input type="text" id="bookmarkInput" placeholder="URL" />
@@ -118,7 +117,6 @@
       <ul id="bookmarkList"></ul>
     </div>
 
-    <!-- Форма збереження даних -->
     <div class="container" id="formApp">
       <h1>Форма</h1>
       <input type="text" id="username" placeholder="Логін" />
@@ -126,6 +124,26 @@
       <button id="saveBtn">Зберегти</button>
     </div>
 
+    <div class="container" id="productApp">
+      <h1>Список продуктів</h1>
+      <input
+        type="text"
+        id="productSearch"
+        placeholder="Пошук продуктів..."
+        style="
+          display: block;
+          width: calc(100% - 40px);
+          margin: 10px auto;
+          padding: 10px;
+          font-size: 16px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+        "
+      />
+      <div id="productListContainer"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.min.js"></script>
     <script>
       // Bookmarks app
       (function () {
@@ -271,6 +289,65 @@
 
         loadFormData();
       })();
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const productData = [
+          {
+            name: "potato",
+            price: "$10.00",
+            description: "Description for product 1.",
+          },
+          {
+            name: "cake",
+            price: "$20.00",
+            description: "Description for product 2.",
+          },
+          {
+            name: "Coca Cola",
+            price: "$15.00",
+            description: "Description for another product.",
+          },
+        ];
+
+        fetch("src/template.hbs")
+          .then((response) => response.text())
+          .then((templateSource) => {
+            const template = Handlebars.compile(templateSource);
+
+            const productListContainer = document.getElementById(
+              "productListContainer"
+            );
+            const searchInput = document.getElementById("productSearch");
+
+            function renderProducts(filteredProducts) {
+              if (filteredProducts.length === 0) {
+                productListContainer.innerHTML = "<p>Товари не знайдені.</p>";
+                return;
+              }
+              const html = template({ products: filteredProducts });
+              productListContainer.innerHTML = html;
+            }
+
+            function filterProducts(searchTerm) {
+              const lowerSearch = searchTerm.toLowerCase();
+              return productData.filter(
+                (product) =>
+                  product.name.toLowerCase().includes(lowerSearch) ||
+                  product.description.toLowerCase().includes(lowerSearch)
+              );
+            }
+
+            searchInput.addEventListener("input", () => {
+              const filtered = filterProducts(searchInput.value);
+              renderProducts(filtered);
+            });
+
+            renderProducts(productData);
+          })
+          .catch((error) => {
+            console.error("Error loading template:", error);
+          });
+      });
     </script>
   </body>
 </html>
